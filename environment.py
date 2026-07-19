@@ -14,14 +14,19 @@ inv_priority = {v:k for k, v in priority.items()}
 
 class Environment ():
     def __init__(self, path):
-        orders, tasks, self.resources, self.stops = self.backlog_read(path)
+        orders, tasks, resources, stops = self.backlog_read(path)
         orders["Predecessora"] = orders["Predecessora"].fillna(False)
+        n_orders = orders["OS"].nunique()
+        #print(n_orders)
+        #print(orders)
+        #print(tasks)
 
         self.days = []
-        stops = self.stops["Dia"].tolist()
+        stops = stops["Dia"].tolist()
+        n_days = resources["Dia"].nunique()
 
-        for i in range(1, 6):
-            day = self.resources.loc[self.resources["Dia"] == f"Dia_{i}"]
+        for i in range(1, n_days+1):
+            day = resources.loc[resources["Dia"] == f"Dia_{i}"]
             abilities = day["Habilidade"].tolist()
             hours = day["HH_Disponivel"].tolist()
             stop = False
@@ -33,14 +38,37 @@ class Environment ():
 
         self.state_space = self.State_space(orders=orders, tasks=tasks)
 
-        # for order in self.state_space:
-        #     current = self.state_space[order]
-        #     pred = self.state_space[current.predecessor]
+        self.adjust_priorities()
 
-        #     if priority[current.priority] > priority[pred.priority]:
-        #         pred.priority
-        # for day in self.days:
-        #     day.print_day()
+        for i in range(1, n_orders+1):
+            os_name = f"OS_{i}"
+            os_tasks = tasks.loc[tasks["OS"] == os_name]
+            #print(os_tasks)
+            order = self.state_space.states[os_name]
+
+            abilities = os_tasks["Habilidade"].tolist()
+            hours = os_tasks["Duração"].tolist()
+            quantities = os_tasks["Quantidade"].tolist()
+
+            for i in range(len(abilities)):
+                #print(abilities[i], hours[i], quantities[i])
+                order.add_task(abilities[i], hours[i], quantities[i])
+
+            order.tasks.reverse()
+
+
+
+
+    def adjust_priorities(self):
+        states = list(self.state_space.states.items())
+        #print(teste)
+        states.sort(key = lambda x: priority[x[1].priority])
+
+        for state in states:
+            order = state[1]
+            pred = order.predecessor
+            if pred and (priority[self.state_space.states[pred].priority] < priority[order.priority]):
+                self.state_space.states[pred].priority = order.priority
 
 
     def backlog_read(self, path):
@@ -62,8 +90,8 @@ class Environment ():
                 order = self.Order(condition, prio, predecessor)
                 self.states[name] = order
 
-            for state in self.states:
-                self.states[state].print_order(state)
+            #for state in self.states:
+                #self.states[state].print_order(state)
 
 
         class Order ():
@@ -74,16 +102,19 @@ class Environment ():
                 self.done = False
                 self.tasks = []
 
+            def add_task(self, ability, time, quantity):
+                new_task = self.Task(ability, time, quantity)
+                self.tasks.append(new_task)
 
             def print_order(self, name):
                 print(f"name: {name}, condition: {self.condition}, priority: {self.priority}, predecessor: {self.predecessor}")
 
             def do_order(self):
-                task = self.tasks[0]
+                task = self.tasks[-1]
                 ability, time = task.do_task()
 
                 if task.done:
-                    self.tasks.pop(0)
+                    self.tasks.pop()
 
                 if len(self.tasks) == 0:
                     self.done = True
@@ -122,15 +153,24 @@ class Environment ():
         action_space = []
         restraints = self.days[day]
 
-        for idx, state in enumerate(self.state_space):
-            order = self.state_space[state]
-            predecessor_done = True if self.state_space[order.predecessor].done else False
-            task = order.tasks[0]
+        for idx, state in enumerate(self.state_space.states):
+            order = self.state_space.states[state]
+            
+            pred = order.predecessor
+            
+            #if pred:
+            #    print(self.state_space.states[order.predecessor].done)
+            predecessor_done = True if order.predecessor == False or self.state_space.states[order.predecessor].done else False
 
-            if restraints.stop == True or order.done or not predecessor_done or restraints.resources[task.ability] < task.time:
+            if restraints.stop == True or order.done or not predecessor_done:
                 continue
-
-            action_space.append([state, priority[self.state_space[state].priority], restraints.resources[task.ability] - task.time])
+            
+            task = order.tasks[-1]
+            if restraints.resources[task.ability] < task.time:
+                continue
+            
+            #print(state)
+            action_space.append([state, priority[self.state_space.states[state].priority], restraints.resources[task.ability] - task.time])
 
 
         return action_space

@@ -12,8 +12,13 @@ def optimize (path):
         while True:
             action_space = env.get_action_space(day.date)
             action_space.sort(key= lambda x: (x[1], x[2]))
+            
+            print(action_space)
+            
+            if len(action_space) == 0:
+                break
 
-            order = env.state_space[action_space[0]]
+            order = env.state_space.states[action_space[0][0]]
 
             ability, time = order.do_order()
             day.resources[ability] -= time
@@ -21,8 +26,7 @@ def optimize (path):
             if order.done:
                 allocated_orders.append([action_space[0], day.date])
     
-            if len(action_space) > 0:
-                break
+                
     
     usage = [(day.total_resources[ability]-day.resources[ability])/day.total_resources[ability] for ability in day.resources]
 
@@ -31,4 +35,5 @@ def optimize (path):
 
 def create_solution(path):
     allocated_orders, usage = optimize(path)
+    print(allocated_orders, usage)
     
