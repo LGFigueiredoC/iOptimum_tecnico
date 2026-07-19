@@ -9,19 +9,21 @@ def optimize (path):
     allocated_orders = []
 
     for day in env.days:
+        print(day.resources)
         while True:
-            action_space = env.get_action_space(day.date)
+            action_space = env.get_action_space(day.date-1)
             action_space.sort(key= lambda x: (x[1], x[2]))
-            
             print(action_space)
+            #print(action_space)
             
             if len(action_space) == 0:
-                break
+                break   
 
             order = env.state_space.states[action_space[0][0]]
 
             ability, time = order.do_order()
-            day.resources[ability] -= time
+            day.resources[ability] = day.resources[ability]-time
+            #print(day.resources)
 
             if order.done:
                 allocated_orders.append([action_space[0], day.date])

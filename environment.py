@@ -140,8 +140,9 @@ class Environment ():
     class Day ():
         def __init__(self, date, abilities, hours, stop):
             self.date = date
-            self.resources = {ability: hour for ability in abilities for hour in hours}
-            self.total_resources = {ability: hour for ability in abilities for hour in hours}
+            self.resources = {abilities[i]: hours[i] for i in range(len(abilities))}
+            #print(self.resources)
+            self.total_resources = {abilities[i]: hours[i] for i in range(len(abilities))}
             self.stop = stop
 
 
@@ -152,6 +153,7 @@ class Environment ():
     def get_action_space (self, day):
         action_space = []
         restraints = self.days[day]
+        print(day, restraints.resources)
 
         for idx, state in enumerate(self.state_space.states):
             order = self.state_space.states[state]
@@ -166,11 +168,11 @@ class Environment ():
                 continue
             
             task = order.tasks[-1]
-            if restraints.resources[task.ability] < task.time:
+            if restraints.resources[task.ability] < task.time and restraints.resources[task.ability]-task.time < 0:
                 continue
             
             #print(state)
-            action_space.append([state, priority[self.state_space.states[state].priority], restraints.resources[task.ability] - task.time])
+            action_space.append([state, priority[self.state_space.states[state].priority], task.time])
 
 
         return action_space
