@@ -9,18 +9,13 @@ def optimize (path):
     finished = False
 
     while not finished:
-        #print("not finished")
+
         first_allocated = None
         for day in env.days:
-            #print("dia")
-            #print(day.date)
-            #print(day.resources)
+
             while True:
-                #print("action_space", day.date-1)
                 action_space = env.get_action_space(day.date-1)
                 action_space.sort(key= lambda x: (x[1], x[2], len(env.state_space.states[x[0]].tasks)))
-                #print(action_space)
-                #print(action_space)
                 
                 if len(action_space) == 0:
                     if first_allocated == None:
@@ -35,7 +30,6 @@ def optimize (path):
 
                 ability, time = order.do_order(day.date-1)
                 day.resources[ability] = day.resources[ability]-time
-                #print(day.resources)
 
                 if order.done:
                     allocated_orders.append([action_space[0], day.date])
@@ -55,7 +49,7 @@ def optimize (path):
     total_used_hours = {"Mecânico":0, "Elétrico":0, "Lubrificador":0, "Soldador":0}
 
     for info in allocated_orders:
-        #print(order)
+
         order = env.state_space.states[info[0][0]]
         for task in order.tasks:
             for date in task.executed:
@@ -72,7 +66,6 @@ def optimize (path):
 def create_solution(path):
     allocated_orders, usage = optimize(path)
     allocated_orders.sort(key=lambda x: x[0][0])
-    #print(allocated_orders, usage)
 
     n_Z = [order for order in allocated_orders if order[0][1] == 0]
     n_A = [order for order in allocated_orders if order[0][1] == 2]

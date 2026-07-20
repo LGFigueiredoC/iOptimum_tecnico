@@ -17,9 +17,6 @@ class Environment ():
         orders, tasks, resources, stops = self.backlog_read(path)
         orders["Predecessora"] = orders["Predecessora"].fillna(False)
         n_orders = orders["OS"].nunique()
-        #print(n_orders)
-        #print(orders)
-        #print(tasks)
 
         self.days = []
         stops = stops["Dia"].tolist()
@@ -51,19 +48,12 @@ class Environment ():
             quantities = os_tasks["Quantidade"].tolist()
 
             for i in range(len(abilities)):
-                #print(abilities[i], hours[i], quantities[i])
                 order.add_task(abilities[i], hours[i], quantities[i])
-
-            #order.tasks.reverse()
-
-        #self.total_allocated = 0
-
-
 
 
     def adjust_priorities(self):
         states = list(self.state_space.states.items())
-        #print(teste)
+        
         states.sort(key = lambda x: priority[x[1].priority])
 
         for state in states:
@@ -92,9 +82,6 @@ class Environment ():
                 order = self.Order(condition, prio, predecessor)
                 self.states[name] = order
 
-            #for state in self.states:
-                #self.states[state].print_order(state)
-
 
         class Order ():
             def __init__(self, condition, prio, predecessor):
@@ -120,7 +107,7 @@ class Environment ():
                 if task.done:
                     self.current_task += 1
 
-                #print(self.current_task)
+                
                 if len(self.tasks) == self.current_task:
                     self.done = True
 
@@ -148,7 +135,7 @@ class Environment ():
         def __init__(self, date, abilities, hours, stop):
             self.date = date
             self.resources = {abilities[i]: hours[i] for i in range(len(abilities))}
-            #print(self.resources)
+            
             self.total_resources = {abilities[i]: hours[i] for i in range(len(abilities))}
             self.stop = stop
 
@@ -160,15 +147,13 @@ class Environment ():
     def get_action_space (self, day):
         action_space = []
         restraints = self.days[day]
-        #print(day, restraints.resources)
+
 
         for idx, state in enumerate(self.state_space.states):
             order = self.state_space.states[state]
             
             pred = order.predecessor
-            
-            #if pred:
-            #    print(self.state_space.states[order.predecessor].done)
+
             predecessor_done = True if order.predecessor == False or self.state_space.states[order.predecessor].done else False
 
             if restraints.stop == True or order.done or not predecessor_done or order.allocated:
@@ -178,7 +163,7 @@ class Environment ():
             if restraints.resources[task.ability] < task.time and restraints.resources[task.ability]-task.time < 0:
                 continue
             
-            #print(state)
+
             action_space.append([state, priority[self.state_space.states[state].priority], task.time])
 
 
@@ -189,7 +174,7 @@ class Environment ():
             day.resources = day.total_resources.copy()
 
         for info in allocated_orders:
-            #print(order)
+            
             order = self.state_space.states[info[0][0]]
             for task in order.tasks:
                 for date in task.executed:
@@ -200,7 +185,6 @@ class Environment ():
 
 
         if not_in_sol not in allocated_orders[0] and not_in_sol is not None:
-            print("APARECEU")
             order = self.state_space.states[not_in_sol[0]]
             for task in order.tasks:
                 for date in task.executed:
