@@ -54,7 +54,9 @@ class Environment ():
                 #print(abilities[i], hours[i], quantities[i])
                 order.add_task(abilities[i], hours[i], quantities[i])
 
-            order.tasks.reverse()
+            #order.tasks.reverse()
+
+        #self.total_allocated = 0
 
 
 
@@ -99,8 +101,10 @@ class Environment ():
                 self.condition = condition
                 self.priority = prio
                 self.predecessor = predecessor
+                self.allocated = False
                 self.done = False
                 self.tasks = []
+                self.current_task = 0
 
             def add_task(self, ability, time, quantity):
                 new_task = self.Task(ability, time, quantity)
@@ -109,14 +113,15 @@ class Environment ():
             def print_order(self, name):
                 print(f"name: {name}, condition: {self.condition}, priority: {self.priority}, predecessor: {self.predecessor}")
 
-            def do_order(self):
-                task = self.tasks[-1]
-                ability, time = task.do_task()
+            def do_order(self, date):
+                task = self.tasks[self.current_task]
+                ability, time = task.do_task(date)
 
                 if task.done:
-                    self.tasks.pop()
+                    self.current_task += 1
 
-                if len(self.tasks) == 0:
+                #print(self.current_task)
+                if len(self.tasks) == self.current_task:
                     self.done = True
 
                 return ability, time
@@ -128,11 +133,13 @@ class Environment ():
                     self.time = time
                     self.quantity = quantity
                     self.done = False
+                    self.executed = []
 
-                def do_task(self):
+                def do_task(self, day):
                     self.quantity -= 1
                     if self.quantity == 0:
                         self.done = True
+                        self.executed.append(day)
                     
                     return self.ability, self.time
                 
@@ -164,10 +171,10 @@ class Environment ():
             #    print(self.state_space.states[order.predecessor].done)
             predecessor_done = True if order.predecessor == False or self.state_space.states[order.predecessor].done else False
 
-            if restraints.stop == True or order.done or not predecessor_done:
+            if restraints.stop == True or order.done or not predecessor_done or order.allocated:
                 continue
             
-            task = order.tasks[-1]
+            task = order.tasks[order.current_task]
             if restraints.resources[task.ability] < task.time and restraints.resources[task.ability]-task.time < 0:
                 continue
             
@@ -176,3 +183,28 @@ class Environment ():
 
 
         return action_space
+    
+    def reset (self, allocated_orders, not_in_sol):
+        for day in self.days:
+            day.resources = day.total_resources.copy()
+
+        for info in allocated_orders:
+            #print(order)
+            order = self.state_space.states[info[0][0]]
+            for task in order.tasks:
+                for date in task.executed:
+                    resources = self.days[date-1].resources
+                    resources[task.ability] = resources[task.ability]-task.time
+
+            order.allocated = True
+
+
+        if not_in_sol not in allocated_orders[0] and not_in_sol is not None:
+            print("APARECEU")
+            order = self.state_space.states[not_in_sol[0]]
+            for task in order.tasks:
+                for date in task.executed:
+                    resources = self.days[date-1].resources
+                    resources[task.ability] = resources[task.ability]-task.time
+
+            order.allocated = True
