@@ -9,11 +9,11 @@ def optimize (path):
     allocated_orders = []
 
     for day in env.days:
-        print(day.resources)
+        #print(day.resources)
         while True:
             action_space = env.get_action_space(day.date-1)
             action_space.sort(key= lambda x: (x[1], x[2]))
-            print(action_space)
+            #print(action_space)
             #print(action_space)
             
             if len(action_space) == 0:
@@ -30,7 +30,7 @@ def optimize (path):
     
                 
     
-    usage = [(day.total_resources[ability]-day.resources[ability])/day.total_resources[ability] for ability in day.resources]
+    usage = [(day.total_resources[ability]-day.resources[ability])*100/day.total_resources[ability] for ability in day.resources]
 
     return allocated_orders, usage
 

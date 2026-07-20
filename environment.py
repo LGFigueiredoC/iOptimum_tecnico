@@ -153,7 +153,7 @@ class Environment ():
     def get_action_space (self, day):
         action_space = []
         restraints = self.days[day]
-        print(day, restraints.resources)
+        #print(day, restraints.resources)
 
         for idx, state in enumerate(self.state_space.states):
             order = self.state_space.states[state]
