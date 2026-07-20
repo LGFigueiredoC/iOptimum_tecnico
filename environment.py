@@ -12,6 +12,7 @@ priority = {'Z': 0,
             'C1': 7}
 inv_priority = {v:k for k, v in priority.items()}
 
+
 class Environment ():
     def __init__(self, path):
         orders, tasks, resources, stops = self.backlog_read(path)
@@ -174,7 +175,6 @@ class Environment ():
             day.resources = day.total_resources.copy()
 
         for info in allocated_orders:
-            
             order = self.state_space.states[info[0][0]]
             for task in order.tasks:
                 for date in task.executed:

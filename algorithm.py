@@ -35,10 +35,7 @@ def optimize (path):
                     allocated_orders.append([action_space[0], day.date])
         
         env.reset(allocated_orders, first_allocated)
-    
-                
-    
-    usage = [(day.total_resources[ability]-day.resources[ability])*100/day.total_resources[ability] for ability in day.resources]
+
 
     total_hours = {"Mecânico":0, "Elétrico":0, "Lubrificador":0, "Soldador":0}
 
